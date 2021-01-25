@@ -26,6 +26,11 @@
 
 ---
 ## Usage
+- If using `vim-plug`, drop this in your plugin manager
+
+  ```vim
+  Plug 'steven-liou/console-puts'  " Toggle print functions on and off 
+  ```
 - The plugin comes with the Vim motion `cp`. It works in both Normal and Visual modes.
 - It only allows the user to add number before the `cp` motion.
   - The available print options shown on screen after typing `cp` is only for user information.
