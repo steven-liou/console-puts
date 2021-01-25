@@ -1,10 +1,10 @@
 # Console-Puts
 ---
 ## Motivations for the plugin
-- Designed for programmers that like to practice coding questions from online sources with test cases
+- Designed for programmers who like to practice coding questions from online sources with test cases
 - To add print functions to lines, it is easy for languages like Ruby that don't require parentheses around existing code. 
   - Adding the print function like `puts` in a block of test cases with multiple cursors or Visual block mode in Vim
-- But it is cumbersome for languages that both use parentheses and `;` to indicate end of line
+- But it is cumbersome for languages that both use parentheses for function calls and `;` to indicate end of line
   - JavaScript needs a long `console.log(` followed by `);`
 - Vim can make life lazier
 
