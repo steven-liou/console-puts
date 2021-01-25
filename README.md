@@ -72,9 +72,24 @@
   let g:console_puts_motion = '<leader>p'
   ```
 ---
+## Supported Programming Languages
+- JavaScript
+- Python
+- Ruby
+- Vim
+
+---
 ### More details on plugin behaviors
 - The plugin parses the "none-code" portion by first identifying an end of line character, either a `;` or a whitespace, then check if it is followed by one of:
   - an "invalid" characters like `->`, `>>` that typically come with online problems
   - another white space
   - comment character of the current language in the file
 - If a line has an invalid character before comment character, it will move the comment character before invalid character.
+
+
+---
+### Todos
+- More language support?
+- Allow user to customize custom language print functions
+- Allow user to customize invalid characters
+
