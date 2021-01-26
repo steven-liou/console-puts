@@ -82,11 +82,11 @@
   
     ```javascript
     "This is line 1"  two spaces after valid code will automatically be commented out
-    "This is line 1";  two spaces after valid code will automatically be commented out
+    "This is line 1"; a ; and a space after valid code will automatically be commented out
 
-    // Result after motion :
-    console.log("This is line 1") //  two spaces after valid code will automatically be commented out
-    console.log("This is line 1"); //   two spaces after valid code will automatically be commented out
+    // Result after motion
+    console.log("This is line 1")  //  two spaces after valid code will automatically be commented out
+    console.log("This is line 1"); //  a ; and a space after valid code will automatically be commented out
 
     ```
 - Takes care of invalid symbols common in problems from online websites
