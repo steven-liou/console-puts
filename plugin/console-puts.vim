@@ -8,8 +8,14 @@ if !exists('g:console_puts_highlight_timeout')
   let g:console_puts_highlight_timeout = 750
 endif
 
-highlight AddPrintLine guifg=#00ff00 ctermfg=Green
-highlight RemovePrintLine guifg=#D16969 ctermfg=Red
+" for allowing user to set custom highlightings
+if !hlexists('AddPrintLine')
+  highlight AddPrintLine guifg=#00ff00 ctermfg=Green
+endif
+
+if !hlexists('RemovePrintLine')
+  highlight RemovePrintLine guifg=#D16969 ctermfg=Red
+endif
 
 " allowing operator motion to take numbers
 function! s:SetupFunc()
