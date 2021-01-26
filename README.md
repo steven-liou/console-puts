@@ -76,6 +76,40 @@
 - You can use the motion the same way in Visual mode
 
 ---
+## Examples for auto commenting
+
+- Takes care of both the line whether it has `;` or not. Just make sure that the "padding" length is either two spaces or a `;` and a whitespace after valid code
+  
+    ```javascript
+    "This is line 1"  two spaces after valid code will automatically be commented out
+    "This is line 1";  two spaces after valid code will automatically be commented out
+
+    // Result after motion :
+    console.log("This is line 1") //  two spaces after valid code will automatically be commented out
+    console.log("This is line 1"); //   two spaces after valid code will automatically be commented out
+
+    ```
+- Takes care of invalid symbols common in problems from online websites
+
+    ```javascript
+    interview("Live coding");>> interview result  // tries to comment out the invalid symbols by moving comment characters forward
+    interview("Live coding") >> interview result  // tries to comment out the invalid symbols by moving comment characters forward
+
+    // Result after motion
+    console.log(interview("Live coding")); // >> interview result   tries to comment out the invalid symbols by moving comment characters forward
+    console.log(interview("Live coding"))  // >> interview result   tries to comment out the invalid symbols by moving comment characters forward
+
+    
+    interview("Live coding");>> interview result Also works if the line doesn't have existing comment characters 
+    interview("Live coding") >> interview result Also works if the line doesn't have existing comment characters
+
+    // Result after motion
+    console.log(interview("Live coding")); // >> interview result Also works if the line doesn't have existing comment characters
+    console.log(interview("Live coding"))  // >> interview result Also works if the line doesn't have existing comment characters
+
+    ```
+
+---
 ## Custom user mapping
 - The users can remap the key by setting `let g:console_puts_mapping = 0`, in their `.vimrc` file. Then manually set custom mappings (default mapping is shown below)
 
