@@ -1,3 +1,15 @@
+" allows user to turn highlight on or off in settings
+if !exists('g:console_puts_highlight')
+  let g:console_puts_highlight = 1
+endif
+
+" allows user to set the time duration of highlight
+if !exists('g:console_puts_highlight_timeout')
+  let g:console_puts_highlight_timeout = 750
+endif
+
+highlight AddPrintLine guifg=#00ff00 ctermfg=Green
+highlight RemovePrintLine guifg=#D16969 ctermfg=Red
 
 " allowing operator motion to take numbers
 function! s:SetupFunc()
@@ -58,6 +70,7 @@ function! s:Get_start_end_lines(type)
 endfunction 
 
 function! s:Toggle_print(type, start_line, end_line, print_option) abort
+
   for line in range(a:start_line, a:end_line)
     let current_line_string = getline(line)
     if s:Invalid_line(current_line_string) | continue | endif
@@ -67,12 +80,33 @@ function! s:Toggle_print(type, start_line, end_line, print_option) abort
     elseif (s:first_count > 0) && a:print_option !=# -1  " user specified valid option
       call s:Remove_print_function_in_line(line)
       call s:Add_print_function(line, a:print_option)
+      if g:console_puts_highlight
+        let lineID = matchaddpos('AddPrintLine', [line])
+      endif
     elseif s:Has_print_function_in_line(current_line_string) !=# '' || a:print_option ==# -1  " if line has print function, remove it, else add it 
+      if s:Has_print_function_in_line(current_line_string) !=# '' && g:console_puts_highlight
+        let lineID = matchaddpos('RemovePrintLine', [line])
+      endif
       call s:Remove_print_function_in_line(line)
     else
       call s:Add_print_function(line, a:print_option)
+      if g:console_puts_highlight
+        let lineID = matchaddpos('AddPrintLine', [line])
+      endif
+    endif
+
+    " clear color highligh after given time
+    if exists('lineID') && g:console_puts_highlight
+      let Func = s:Create_clear_highlight(lineID)
+      call timer_start(g:console_puts_highlight_timeout, Func)
+      unlet lineID
     endif
   endfor
+endfunction
+
+function! s:Create_clear_highlight(id) abort
+  let ClearHighlight = {id -> matchdelete(a:id)}
+  return ClearHighlight
 endfunction
 
 function! s:Invalid_line(string) abort
@@ -153,7 +187,6 @@ function s:Get_string_parts(string, add_comment) abort
     let content_string = content_string[len(content_string) - 1] ==# ' ' ? content_string[:-2] : content_string
   else
     let content_string = trimmed_string
-    echom content_string
   endif
 
   return [leading_spaces, content_string, comment_string]
@@ -246,9 +279,11 @@ endif
 
 if g:console_puts_mapping
   nmap cp <Plug>ConsolePutsNormal
-  vmap cp <Plug>ConsolePutsVisual 
+  vmap cp <Plug>ConsolePutsVisual
 elseif exists('g:console_puts_motion')
   execute 'nmap ' . g:console_puts_motion . ' <Plug>ConsolePutsNormal'
   execute 'vmap ' . g:console_puts_motion . ' <Plug>ConsolePutsVisual'
 endif
+
+
 

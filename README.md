@@ -22,6 +22,7 @@
 - Auto add comment characters after valid code in a given line (see more details below)
 - Allows user to select which print functions to use if multiple options are available
 - Works in both Vim Normal and Visual modes
+- Color highlight to indicate whether print function is added (green) or removed (red) from the line. Highlights can be customized.
 - Allows the user to add print functions to languages not supported in the plugin
 
 ---
@@ -110,7 +111,7 @@
     ```
 
 ---
-## Custom user mapping
+## Custom user settings and mapping
 - The users can remap the key by setting `let g:console_puts_mapping = 0`, in their `.vimrc` file. Then manually set custom mappings (default mapping is shown below)
 
   ```vim
@@ -121,6 +122,19 @@
   let g:console_puts_mapping = 0
   let g:console_puts_motion = '<leader>p'
   ```
+- The default setting will have highlight during print function toggling for visual feedback. The default highlight duration is 750 ms. To turn off highlight or set a different timeout in ms, add this to `.vimrc`
+  
+    ```vim
+    let g:console_puts_highlight = 0
+    let g:console_puts_highlight_timeout = 750
+    ```
+- You can change the color for the add/remove print functions:
+
+    ```vim
+    highlight AddPrintLine guifg=#00ff00 ctermfg=Green
+    highlight RemovePrintLine guifg=#D16969 ctermfg=Red
+    ```
+    
 ---
 ## Supported Programming Languages
 - JavaScript
