@@ -38,7 +38,7 @@
   - To toggle the current line, `cpl` or `cpil`
   - To toggle two lines, `cpj`
   - To use a specific print function in line, like in Ruby using `print` instead of `puts`, `3cpl`
-- The default behavior is to toggle print function on or off, so if your selection has lines that have print function and lines don't, they will flip.
+- The default behavior is to toggle print function on or off using the default print function of that language. If your selection has lines that have print function and lines don't, they will flip.
   - In Ruby
 
     ```vim
@@ -52,7 +52,7 @@
     puts "this is line 2"
     ```
 
-- But if you input a number before `cp`, then it will apply the option to all lines
+- But if you input a number before `cp`, then it will apply the print option to all lines
   - In Ruby, 
 
     ```vim
@@ -60,7 +60,7 @@
     "this is line 2"
     ```
 
-  - if you type `3cpip`, it will become
+  - if you type `3cpip` to select a print option, it will become
 
     ```vim
     print "this is line 1"
