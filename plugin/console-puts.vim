@@ -305,9 +305,6 @@ endif
 if g:console_puts_mapping
   nmap cp <Plug>ConsolePutsNormal
   vmap cp <Plug>ConsolePutsVisual
-elseif exists('g:console_puts_motion')
-  execute 'nmap ' . g:console_puts_motion . ' <Plug>ConsolePutsNormal'
-  execute 'vmap ' . g:console_puts_motion . ' <Plug>ConsolePutsVisual'
 endif
 
 
