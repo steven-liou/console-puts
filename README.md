@@ -37,7 +37,7 @@
   - The available print options shown on screen after typing `cp` is only for user information.
   - Ex: `2cp2j` means select 2nd option and apply to current line and 2 lines down
 - Examples :
-  - To toggle the current line, `cpl` or `cpil`
+  - To toggle the current line, `cpl`
   - To toggle two lines, `cpj`
   - To use a specific print function in line, like in Ruby using `print` instead of `puts`, `3cpl`
 - The default behavior is to toggle print function on or off using the default print function of that language. If your selection has lines that have print function and lines don't, they will flip.
