@@ -28,7 +28,7 @@ endfunction
 
 " Get a list of possible print functions for current language type, join them together and output on screen
 function! s:Print_options() abort
-  let print_function_names = s:Get_print_function_name()
+  let print_function_names = copy(s:Get_print_function_name())
   let print_function_names = add(print_function_names, 'Remove')
   let index = 0
   let options = ['Available option before operator motion: | ']
@@ -259,39 +259,77 @@ function! s:Remove_print_content_string(content_string) abort
   return removed_delimiter_content
 endfunction
 
+
+" Allow the user to specify print function names for a programming language
+let s:print_function_dict = {
+      \ 'javascript' : ['console.log'],
+      \ 'python' : ['print'],
+      \ 'ruby' : ['puts', 'p', 'print'],
+      \ 'vim' : ['echom', 'echo'],
+      \ }
+
+if exists('g:print_functions')
+  for [language, print_function] in items(g:print_functions)
+    let s:print_function_dict[language] = print_function
+  endfor
+endif
+
 function! s:Get_print_function_name() abort
-  let print_function_dict = {
-        \ 'javascript' : ['console.log'],
-        \ 'python' : ['print'],
-        \ 'ruby' : ['puts', 'p', 'print'],
-        \ 'vim' : ['echom', 'echo'],
-        \ }
-  return print_function_dict[&filetype]
+  return s:print_function_dict[&filetype]
 endfunction
+
+
+" Allow the user to specify end of line delimiters for a programming language
+let s:end_line_delimiter_dict = {
+      \ 'javascript' : ';',
+      \ 'python' : ';',
+      \ 'ruby' : ';',
+      \ 'vim' : ';',
+      \ }
+
+if exists('g:end_line_delimiters') 
+  for [language, end_line_delimiter] in items(g:end_line_delimiters)
+    let s:end_line_delimiter_dict[language] = end_line_delimiter
+  endfor
+endif
 
 function! s:End_line_delimiters() abort
-  let end_line_delimiter_dict = {
-        \ 'javascript' : ';',
-        \ 'python' : ';',
-        \ 'ruby' : ';',
-        \ 'vim' : ';',
-        \ }
-  return end_line_delimiter_dict[&filetype]
+  return s:end_line_delimiter_dict[&filetype]
 endfunction
 
+" allows the user to spcify the function call delimiters for a programming language
+let s:function_call_delimiter_dict = {
+      \ 'javascript' : ['(', ')'],
+      \ 'python' : ['(', ')'],
+      \ 'ruby' : [' ', ''],
+      \ 'vim' : [' ', ''],
+      \ }
+
+if exists('g:function_call_delimiters')
+  for [language, delimiters] in items(g:function_call_delimiters)
+    let s:function_call_delimiter_dict[language] = delimiters
+  endfor
+endif
+
 function! s:Function_call_delimiters() abort
-  let function_call_delimiter_dict = {
-        \ 'javascript' : ['(', ')'],
-        \ 'python' : ['(', ')'],
-        \ 'ruby' : [' ', ''],
-        \ 'vim' : [' ', ''],
-        \ }
-  return function_call_delimiter_dict[&filetype]
+  return s:function_call_delimiter_dict[&filetype]
 endfunction
+
+
+" allows the user to specify noise characters to comment out
+let s:noise_chars_dict = {
+      \ 'general' :['⇉+', '⇆+', '↔+', '⇨+', '↔+', '⇾+', '➞+', '\-+\>', '\~+\>', '\>+'],
+      \ }
+
+if exists('g:noise_chars') 
+  for [language, delimiters] in items(g:noise_chars)
+    let s:noise_chars_dict[language] = delimiters
+  endfor
+endif
 
 function! s:Noise_chars() abort
   " noise characters are symbols that some problems from online like to put in front of test cases expected results. The goal is to match those noise chars and move/place the comment char infront of them if they exist
-  return ['⇉', '⇆', '↔', '⇨', '↔', '⇾', '➞', '\-+\>', '\~+\>', '\>+']
+  return s:noise_chars_dict['general'] + get(s:noise_chars_dict, &filetype, [])
 endfunction
 
 " Code for mappings

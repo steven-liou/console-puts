@@ -125,12 +125,50 @@
   vmap <leader>p <Plug>ConsolePutsVisual
 
   ```
+- If the plugin doesn't support your programming language, you can add the print function by a dictionary in your `.vimrc`. Or if you prefer to reorder the print functions for supported languages.
+
+  ```vim
+  let g:print_functions = {
+    \ 'ruby' : ['puts', 'p', 'print'],
+    \ 'vim' : ['echom', 'echo'],
+    \ 'go' : ['fmt.Println'],
+    \ }
+  ```
+
+- If the plugin doesn't support your programming language, you can specify the end of line delimiter by a dictionary in your `.vimrc`.
+
+  ```vim
+  let g:end_line_delimiters = {
+      \ 'matlab' : ';',
+      \ }
+  ```
+
+- If the plugin doesn't support your programming language, or if you'd like to specify parentheses anyways, you can specify the print function call open and delimiters by a dictionary with a list.
+
+    ```vim
+    let g:function_call_delimiters = {
+      \ 'ruby' : ['(', ')'],
+      \ 'vim' : ['(', ')'],
+      \ }
+    ```
+    
+    
 - The default setting will have highlight during print function toggling for visual feedback. The default highlight duration is 750 ms. To turn off highlight or set a different timeout in ms, add this to `.vimrc`
   
     ```vim
     let g:console_puts_highlight = 0
     let g:console_puts_highlight_timeout = 750
     ```
+
+- You can specify what characters are noise characters and comment them out when adding print function. You can specify a `general` list for all programming languages, and a language specific list.
+
+    ```vim
+    let g:noise_chars = {
+      \ 'general' :['⇉+', '⇆+', '↔+', '⇨+', '↔+', '⇾+', '➞+', '\-+\>', '\~+\>', '\>+'],
+      \ 'ruby' : ['!!'],
+      \ }
+    ```
+    
 - You can change the color for the add/remove print functions:
 
     ```vim
@@ -157,6 +195,4 @@
 ---
 ### Todos
 - More language support?
-- Allow user to customize custom language print functions
-- Allow user to customize invalid characters
 
