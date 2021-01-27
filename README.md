@@ -33,8 +33,9 @@
   Plug 'steven-liou/console-puts'  " Toggle print functions on and off 
   ```
 - The plugin comes with the Vim motion `cp`. It works in both Normal and Visual modes.
-- It only allows the user to add number before the `cp` motion.
+- The print option is only for the first number before the `cp` motion.
   - The available print options shown on screen after typing `cp` is only for user information.
+  - Ex: `2cp2j` means select 2nd option and apply to current line and 2 lines down
 - Examples :
   - To toggle the current line, `cpl` or `cpil`
   - To toggle two lines, `cpj`

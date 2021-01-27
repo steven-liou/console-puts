@@ -80,9 +80,7 @@ function! s:Toggle_print(type, start_line, end_line, print_option) abort
     let current_line_string = getline(line)
     if s:Invalid_line(current_line_string) | continue | endif
     
-    if s:second_count !=# 1 && a:type !=? 'v'
-      echom "Only number before operator motion is allowed. Retry."
-    elseif (s:first_count > 0) && a:print_option !=# -1  " user specified valid option that adds print function
+    if (s:first_count > 0) && a:print_option !=# -1  " user specified valid option that adds print function
       call s:Option_print_helper(line, a:print_option)
     elseif s:Has_print_function_in_line(current_line_string) !=# '' || a:print_option ==# -1  " if line has print function, remove it, else add print function 
       call s:Remove_print_helper(line, current_line_string)
