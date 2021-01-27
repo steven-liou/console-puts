@@ -18,7 +18,7 @@ if !hlexists('RemovePrintLine')
 endif
 
 " allowing operator motion to take numbers
-function! s:SetupFunc()
+function! s:SetupFunc() abort
     " stores the first motion number, before entering this motion, in script scope
     let s:first_count = v:count
     set operatorfunc=ConsolePutsOperator
@@ -62,7 +62,7 @@ function! s:Get_print_option(type) abort
   return print_option > len(print_function_names) ? -1 : print_option - 1
 endfunction
 
-function! s:Get_start_end_lines(type)
+function! s:Get_start_end_lines(type) abort
   " handles normal and visual mode selected line range numbers
   if (a:type ==# 'v' || a:type==# 'V')
     let start_line = line("'<")
@@ -344,6 +344,5 @@ if g:console_puts_mapping
   nmap cp <Plug>ConsolePutsNormal
   vmap cp <Plug>ConsolePutsVisual
 endif
-
 
 
