@@ -146,7 +146,7 @@ function! s:Has_print_function_in_line(string) abort
   return ''
 endfunction
 
-function s:Get_string_parts(string, add_comment) abort
+function! s:Get_string_parts(string, add_comment) abort
   let leading_spaces = matchstr(a:string, '\v^\s*')
   let trimmed_string = a:string[len(leading_spaces):]
   let trimmed_string = substitute(trimmed_string, '\v\s*$', '', 'e') " remove trailing white spaces
