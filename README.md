@@ -121,7 +121,9 @@
 
   " if you want to map with a leader key
   let g:console_puts_mapping = 0
-  let g:console_puts_motion = '<leader>p'
+  nmap <leader>p <Plug>ConsolePutsNormal
+  vmap <leader>p <Plug>ConsolePutsVisual
+
   ```
 - The default setting will have highlight during print function toggling for visual feedback. The default highlight duration is 750 ms. To turn off highlight or set a different timeout in ms, add this to `.vimrc`
   
