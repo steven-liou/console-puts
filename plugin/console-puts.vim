@@ -224,7 +224,7 @@ function! s:Add_print_content_string(content_string, comment_string_length) abor
   else 
     let content_string = open_delimiter . a:content_string . close_delimiter 
     if a:comment_string_length > 0   " add a space padding if there is comment after the content
-      let content_string = a:content_string . ' '
+      let content_string = content_string . ' '
     endif
   endif
 
