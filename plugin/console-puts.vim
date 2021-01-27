@@ -177,7 +177,7 @@ function! s:Get_string_parts(string, add_comment) abort
     if comment_string[0] !=# ' ' 
       let comment_string = ' ' . comment_char . comment_padding . comment_string
     else
-      let comment_string = ' ' comment_char . comment_padding . comment_string[1:]
+      let comment_string = ' ' . comment_char . comment_padding . comment_string[1:]
     endif
   else
     if comment_string[0] !=# ' ' && comment_string_length > 0
