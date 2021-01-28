@@ -28,6 +28,7 @@
 ---
 ## Usage
 - If using `vim-plug`, drop this in your plugin manager
+- Make sure that you have `filetype on` in your `.vimrc`, so that Vim knows what filetype you are working on.
 
   ```vim
   Plug 'steven-liou/console-puts'  " Toggle print functions on and off 
