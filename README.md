@@ -175,6 +175,7 @@
     
 ---
 ## Supported Programming Languages
+- Go
 - JavaScript
 - Python
 - Ruby

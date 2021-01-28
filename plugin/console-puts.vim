@@ -258,6 +258,7 @@ endfunction
 
 " Allow the user to specify print function names for a programming language
 let s:print_function_dict = {
+      \ 'go' : ['fmt.Println', 'fmt.Print'],
       \ 'javascript' : ['console.log'],
       \ 'python' : ['print'],
       \ 'ruby' : ['puts', 'p', 'print'],
@@ -277,6 +278,7 @@ endfunction
 
 " Allow the user to specify end of line delimiters for a programming language
 let s:end_line_delimiter_dict = {
+      \ 'go' : ';',
       \ 'javascript' : ';',
       \ 'python' : ';',
       \ 'ruby' : ';',
@@ -295,6 +297,7 @@ endfunction
 
 " allows the user to spcify the function call delimiters for a programming language
 let s:function_call_delimiter_dict = {
+      \ 'go' : ['(', ')'],
       \ 'javascript' : ['(', ')'],
       \ 'python' : ['(', ')'],
       \ 'ruby' : [' ', ''],
