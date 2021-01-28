@@ -350,7 +350,7 @@ if !exists('g:console_puts_mapping')
 endif
 
 if g:console_puts_mapping
-  nmap cp <Plug>ConsolePutsNormal 
+  nmap cp <Plug>ConsolePutsNormal
   vmap cp <Plug>ConsolePutsVisual
 endif
 
