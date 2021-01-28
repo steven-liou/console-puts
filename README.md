@@ -117,14 +117,11 @@
 
   ```vim
   let g:console_puts_mapping = 0
-  let g:console_puts_motion = 'cp'
-
   " if you want to map with a leader key
-  let g:console_puts_mapping = 0
   nmap <leader>p <Plug>ConsolePutsNormal
   vmap <leader>p <Plug>ConsolePutsVisual
-
   ```
+
 - If the plugin doesn't support your programming language, you can add the print function by a dictionary in your `.vimrc`. Or if you prefer to reorder the print functions for supported languages.
 
   ```vim
@@ -151,14 +148,6 @@
       \ 'vim' : ['(', ')'],
       \ }
     ```
-    
-    
-- The default setting will have highlight during print function toggling for visual feedback. The default highlight duration is 750 ms. To turn off highlight or set a different timeout in ms, add this to `.vimrc`
-  
-    ```vim
-    let g:console_puts_highlight = 0
-    let g:console_puts_highlight_timeout = 750
-    ```
 
 - You can specify what characters are noise characters and comment them out when adding print function. You can specify a `general` list for all programming languages, and a language specific list.
 
@@ -167,6 +156,13 @@
       \ 'general' :['⇉+', '⇆+', '↔+', '⇨+', '↔+', '⇾+', '➞+', '\-+\>', '\~+\>', '\>+'],
       \ 'ruby' : ['!!'],
       \ }
+    ```
+
+- The default setting will have highlight during print function toggling for visual feedback. The default highlight duration is 750 ms. To turn off highlight or set a different timeout in ms, add this to `.vimrc`
+  
+    ```vim
+    let g:console_puts_highlight = 0
+    let g:console_puts_highlight_timeout = 750
     ```
     
 - You can change the color for the add/remove print functions:

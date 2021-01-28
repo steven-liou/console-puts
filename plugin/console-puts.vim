@@ -81,11 +81,11 @@ function! s:Toggle_print(type, start_line, end_line, print_option) abort
     if s:Invalid_line(current_line_string) | continue | endif
     
     if (s:first_count > 0) && a:print_option !=# -1  " user specified valid option that adds print function
-      call s:Option_print_helper(line, a:print_option)
+      call s:Option_print_helper(line, current_line_string, a:print_option)
     elseif s:Has_print_function_in_line(current_line_string) !=# '' || a:print_option ==# -1  " if line has print function, remove it, else add print function 
       call s:Remove_print_helper(line, current_line_string)
     else
-      call s:Add_print_helper(line, a:print_option)
+      call s:Add_print_helper(line, current_line_string, a:print_option)
     endif
   endfor
 endfunction
@@ -103,10 +103,11 @@ function! s:Clear_highlight(id) abort
   call timer_start(g:console_puts_highlight_timeout, Func)
 endfunction
 
-" The helper functions handle logic for whether to highlight the toggling actions
-function! s:Option_print_helper(line, option) abort
-  call s:Remove_print_function_in_line(a:line)
-  call s:Add_print_function(a:line, a:option)
+" The helper functions that set the line with final results, and handle logic for whether to highlight the toggling actions
+function! s:Option_print_helper(line, current_line_string, option) abort
+  let removed_print_line = s:Remove_print_function_in_line(a:current_line_string)
+  let added_print_line = s:Add_print_function(removed_print_line, a:option)
+  call setline(a:line, added_print_line)
 
   if g:console_puts_highlight
     let lineID = matchaddpos('AddPrintLine', [a:line])
@@ -115,7 +116,7 @@ function! s:Option_print_helper(line, option) abort
 endfunction
 
 function! s:Remove_print_helper(line, current_line_string) abort
-  call s:Remove_print_function_in_line(a:line)
+  call setline(a:line, s:Remove_print_function_in_line(a:current_line_string))
 
   if s:Has_print_function_in_line(a:current_line_string) !=# '' && g:console_puts_highlight
     let lineID = matchaddpos('RemovePrintLine', [a:line])
@@ -123,15 +124,13 @@ function! s:Remove_print_helper(line, current_line_string) abort
   endif
 endfunction
 
-function! s:Add_print_helper(line, option) abort
-  call s:Add_print_function(a:line, a:option)
+function! s:Add_print_helper(line, current_line_string, option) abort
+  call setline(a:line, s:Add_print_function(a:current_line_string, a:option))
   if g:console_puts_highlight
     let lineID = matchaddpos('AddPrintLine', [a:line])
     call s:Clear_highlight(lineID)
   endif
 endfunction 
-
-
 
 function! s:Has_print_function_in_line(string) abort
   let print_function_name = s:Get_print_function_name()
@@ -151,20 +150,41 @@ function! s:Get_string_parts(string, add_comment) abort
   let trimmed_string = a:string[len(leading_spaces):]
   let trimmed_string = substitute(trimmed_string, '\v\s*$', '', 'e') " remove trailing white spaces
 
+  let comment_string = s:Get_comment_parts_from_trimmed_string(trimmed_string, a:add_comment)
+  let pre_comment_string_length = len(comment_string)
+  let decorated_comment_string = s:Decorate_comment_string(comment_string, a:add_comment)
+
+  " Get the content string
+  if len(decorated_comment_string) > 0 
+    let content_string = trimmed_string[:-(pre_comment_string_length + 1)]
+    let content_string = content_string[len(content_string) - 1] ==# ' ' ? content_string[:-2] : content_string
+  else
+    let content_string = trimmed_string
+  endif
+
+  return [leading_spaces, content_string, decorated_comment_string]
+endfunction
+
+function! s:Get_comment_parts_from_trimmed_string(string, add_comment) abort
   let comment_char = split(&commentstring, '%s')[0]
   let noise_chars_pattern = join(s:Noise_chars(), '|')
   " The pattern look from the back of the trimmed string. It first looks for noise chars after valid code, then empty space. If match, it looks beforehand 1 char and check if it is a ; or a space
   " The idea is to check at least a ; or a space before the noise or comment char to distinguish the valid code and the comment parts in the line
   let comment_regex = '\v(;|\s)@<=(' . noise_chars_pattern . '|\s|' . comment_char . ').{-}$' 
-  let comment_string = matchstr(trimmed_string, comment_regex)
+  let comment_string = matchstr(a:string, comment_regex)
   let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
   if empty_comment_string ==# ''
     let comment_string = ''
   end
-  let comment_string_length = len(comment_string)
- 
+  
+  return comment_string
+endfunction
 
-  " if comment part doesn't start with the comment char
+function! s:Decorate_comment_string(string, add_comment) abort
+  let comment_char = split(&commentstring, '%s')[0]
+  let comment_string = a:string
+  let comment_string_length = len(comment_string)
+    " if comment part doesn't start with the comment char
   if match(comment_string, '\v^\s*' . comment_char) ==# -1 && comment_string_length > 0 && a:add_comment
     " remotve existing comment char if exists
     if match(comment_string, '\v' . comment_char) !=# -1
@@ -185,29 +205,19 @@ function! s:Get_string_parts(string, add_comment) abort
     endif
   endif
 
+  return comment_string
 
-  " Get the content string
-  if len(comment_string) > 0 
-    let content_string = trimmed_string[:-(comment_string_length + 1)]
-    let content_string = content_string[len(content_string) - 1] ==# ' ' ? content_string[:-2] : content_string
-  else
-    let content_string = trimmed_string
-  endif
-
-  return [leading_spaces, content_string, comment_string]
 endfunction
 
-
-function! s:Add_print_function(line_number, print_option) abort
-  let string = getline(a:line_number)
-  let [leading_spaces, content_string, comment_string] = s:Get_string_parts(string, 1)
+function! s:Add_print_function(string, print_option) abort
+  let [leading_spaces, content_string, comment_string] = s:Get_string_parts(a:string, 1)
   let content_string = s:Add_print_content_string(content_string, len(comment_string))
   
   " get the print function name chosen by user, build the final line, and replace the current line with the result
   let print_function_names = s:Get_print_function_name()
   let print_function = get(print_function_names, a:print_option, print_function_names[0])
   let result_content = leading_spaces . print_function . content_string  . comment_string
-  call setline(a:line_number, result_content)
+  return result_content
 endfunction
 
 " build the original content string wrapped by the print function, i.e. the expression to be printed
@@ -229,14 +239,13 @@ function! s:Add_print_content_string(content_string, comment_string_length) abor
   return content_string
 endfunction
 
-function! s:Remove_print_function_in_line(line_number) abort
-  let string = getline(a:line_number)
-  let [leading_spaces, content_string, comment_string] = s:Get_string_parts(string, 0)
+function! s:Remove_print_function_in_line(string) abort
+  let [leading_spaces, content_string, comment_string] = s:Get_string_parts(a:string, 0)
   let removed_print_content_string = s:Remove_print_content_string(content_string)
 
   " build the result string and replace current line with it
   let result_content = leading_spaces . removed_print_content_string . comment_string
-  call setline(a:line_number, result_content)
+  return result_content
 endfunction
 
 function! s:Remove_print_content_string(content_string) abort
@@ -341,7 +350,7 @@ if !exists('g:console_puts_mapping')
 endif
 
 if g:console_puts_mapping
-  nmap cp <Plug>ConsolePutsNormal
+  nmap cp <Plug>ConsolePutsNormal 
   vmap cp <Plug>ConsolePutsVisual
 endif
 
