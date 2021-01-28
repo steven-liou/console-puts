@@ -150,41 +150,20 @@ function! s:Get_string_parts(string, add_comment) abort
   let trimmed_string = a:string[len(leading_spaces):]
   let trimmed_string = substitute(trimmed_string, '\v\s*$', '', 'e') " remove trailing white spaces
 
-  let comment_string = s:Get_comment_parts_from_trimmed_string(trimmed_string, a:add_comment)
-  let pre_comment_string_length = len(comment_string)
-  let decorated_comment_string = s:Decorate_comment_string(comment_string, a:add_comment)
-
-  " Get the content string
-  if len(decorated_comment_string) > 0 
-    let content_string = trimmed_string[:-(pre_comment_string_length + 1)]
-    let content_string = content_string[len(content_string) - 1] ==# ' ' ? content_string[:-2] : content_string
-  else
-    let content_string = trimmed_string
-  endif
-
-  return [leading_spaces, content_string, decorated_comment_string]
-endfunction
-
-function! s:Get_comment_parts_from_trimmed_string(string, add_comment) abort
   let comment_char = split(&commentstring, '%s')[0]
   let noise_chars_pattern = join(s:Noise_chars(), '|')
   " The pattern look from the back of the trimmed string. It first looks for noise chars after valid code, then empty space. If match, it looks beforehand 1 char and check if it is a ; or a space
   " The idea is to check at least a ; or a space before the noise or comment char to distinguish the valid code and the comment parts in the line
   let comment_regex = '\v(;|\s)@<=(' . noise_chars_pattern . '|\s|' . comment_char . ').{-}$' 
-  let comment_string = matchstr(a:string, comment_regex)
+  let comment_string = matchstr(trimmed_string, comment_regex)
   let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
   if empty_comment_string ==# ''
     let comment_string = ''
   end
-  
-  return comment_string
-endfunction
-
-function! s:Decorate_comment_string(string, add_comment) abort
-  let comment_char = split(&commentstring, '%s')[0]
-  let comment_string = a:string
   let comment_string_length = len(comment_string)
-    " if comment part doesn't start with the comment char
+ 
+
+  " if comment part doesn't start with the comment char
   if match(comment_string, '\v^\s*' . comment_char) ==# -1 && comment_string_length > 0 && a:add_comment
     " remotve existing comment char if exists
     if match(comment_string, '\v' . comment_char) !=# -1
@@ -205,8 +184,16 @@ function! s:Decorate_comment_string(string, add_comment) abort
     endif
   endif
 
-  return comment_string
 
+  " Get the content string
+  if len(comment_string) > 0 
+    let content_string = trimmed_string[:-(comment_string_length + 1)]
+    let content_string = content_string[len(content_string) - 1] ==# ' ' ? content_string[:-2] : content_string
+  else
+    let content_string = trimmed_string
+  endif
+
+  return [leading_spaces, content_string, comment_string]
 endfunction
 
 function! s:Add_print_function(string, print_option) abort
@@ -284,7 +271,7 @@ if exists('g:print_functions')
 endif
 
 function! s:Get_print_function_name() abort
-  return s:print_function_dict[&filetype]
+  return get(s:print_function_dict, &filetype, [''])
 endfunction
 
 
@@ -303,7 +290,7 @@ if exists('g:end_line_delimiters')
 endif
 
 function! s:End_line_delimiters() abort
-  return s:end_line_delimiter_dict[&filetype]
+  return get(s:end_line_delimiter_dict, &filetype, ';')
 endfunction
 
 " allows the user to spcify the function call delimiters for a programming language
@@ -321,7 +308,7 @@ if exists('g:function_call_delimiters')
 endif
 
 function! s:Function_call_delimiters() abort
-  return s:function_call_delimiter_dict[&filetype]
+  return get(s:function_call_delimiter_dict, &filetype, ['(', ')'])
 endfunction
 
 
@@ -350,8 +337,8 @@ if !exists('g:console_puts_mapping')
 endif
 
 if g:console_puts_mapping
-  nmap cp <Plug>ConsolePutsNormal
   vmap cp <Plug>ConsolePutsVisual
+  nmap cp <Plug>ConsolePutsNormal
 endif
 
 
