@@ -1,5 +1,7 @@
 # Console-Puts
 ---
+  ![](src/demo.gif)
+
 ## Motivations for the plugin
 - Designed for programmers who like to practice coding questions from online sources with test cases
 - To add print functions to lines, it is easy for languages like Ruby that don't require parentheses around existing code. 
