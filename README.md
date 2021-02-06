@@ -194,7 +194,6 @@
 
 ---
 ### Bugs
-- Two or more spaces in a string causes part of the code to be commented out
 
 
 ---

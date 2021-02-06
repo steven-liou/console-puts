@@ -150,20 +150,10 @@ function! s:Get_string_parts(string, add_comment) abort
   let trimmed_string = a:string[len(leading_spaces):]
   let trimmed_string = substitute(trimmed_string, '\v\s*$', '', 'e') " remove trailing white spaces
 
-  let comment_char = split(&commentstring, '%s')[0]
-  let end_line_delimiter = s:End_line_delimiters()
-  let noise_chars_pattern = join(s:Noise_chars(), '|')
-  " The pattern look from the back of the trimmed string. It first looks for noise chars after valid code, then empty space. If match, it looks beforehand 1 char and check if it is a ; or a space
-  " The idea is to check at least a ; or a space before the noise or comment char to distinguish the valid code and the comment parts in the line
-  let comment_regex = '\v(' . end_line_delimiter . '|\s)@<=(' . noise_chars_pattern . '|\s|' . comment_char . ').{-}$' 
-  let comment_string = matchstr(trimmed_string, comment_regex)
-  let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
-  if empty_comment_string ==# ''
-    let comment_string = ''
-  end
+  let comment_string = s:Get_comment_part(trimmed_string, a:add_comment)
   let comment_string_length = len(comment_string)
- 
 
+  let comment_char = split(&commentstring, '%s')[0]
   " if comment part doesn't start with the comment char
   if match(comment_string, '\v^\s*' . comment_char) ==# -1 && comment_string_length > 0 && a:add_comment
     " remotve existing comment char if exists
@@ -176,8 +166,8 @@ function! s:Get_string_parts(string, add_comment) abort
     " Add the comment char in front, decide on whether first char is a space already
     if comment_string[0] !=# ' ' 
       let comment_string = ' ' . comment_char . comment_padding . comment_string
-    else
-      let comment_string = ' ' . comment_char . comment_padding . comment_string[1:]
+    " else
+    "   let comment_string = ' ' . comment_char . comment_padding . comment_string[1:]
     endif
   else
     if comment_string[0] !=# ' ' && comment_string_length > 0
@@ -190,11 +180,41 @@ function! s:Get_string_parts(string, add_comment) abort
   if len(comment_string) > 0 
     let content_string = trimmed_string[:-(comment_string_length + 1)]
     let content_string = content_string[len(content_string) - 1] ==# ' ' ? content_string[:-2] : content_string
+    let content_string = substitute(content_string, '\v\s*$', '', 'e')  " remove trailing white spaces
   else
     let content_string = trimmed_string
   endif
 
   return [leading_spaces, content_string, comment_string]
+endfunction
+
+
+function! s:Get_comment_part(trimmed_string, add_comment) abort
+  let comment_char = split(&commentstring, '%s')[0]
+  
+  " take care of lines that have more than two consecutive white spaces in a string literal
+  if a:add_comment
+    let parts = split(a:trimmed_string, '\v\s{2,}')
+    let last_part = parts[len(parts) - 1]
+    echom parts
+    echom last_part
+    if len(parts) > 1 && match(last_part, comment_char) ==# -1
+      return parts[len(parts) - 1]
+    endif
+  endif
+
+  let end_line_delimiter = s:End_line_delimiters()
+  let noise_chars_pattern = join(s:Noise_chars(), '|')
+  " The pattern look from the back of the trimmed string. It first looks for noise chars after valid code, then empty space. If match, it looks beforehand 1 char and check if it is a ; or a space
+  " The idea is to check at least a ; or a space before the noise or comment char to distinguish the valid code and the comment parts in the line
+  let comment_regex = '\v(' . end_line_delimiter . '\s*|\s+)@<=(' . noise_chars_pattern . '|' . comment_char . ').{-}$' 
+  let comment_string = matchstr(a:trimmed_string, comment_regex)
+  let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
+  if empty_comment_string ==# ''
+    let comment_string = ''
+  end
+  
+  return comment_string
 endfunction
 
 function! s:Add_print_function(string, print_option) abort
@@ -243,14 +263,19 @@ function! s:Remove_print_content_string(content_string) abort
   " clean up the print function's parentheses if exist
   let [open_delimiter, close_delimiter] = s:Function_call_delimiters()
 
-  if removed_print_function_content[0] ==# '('
+  if open_delimiter !=# ' ' " for languages that use open-close delimiter, typically parentheses, for function calls
     let removed_print_array = split(removed_print_function_content, '\zs')
-    let last_close_paren_index = len(removed_print_array) - index(reverse(copy(removed_print_array)), ')') - 1
+    let last_close_paren_index = len(removed_print_array) - index(reverse(copy(removed_print_array)), close_delimiter ) - 1
     let removed_delimiter_content = join(removed_print_array[1:last_close_paren_index - 1] + removed_print_array[last_close_paren_index + 1 :], '')
-  elseif removed_print_function_content[0] ==# ' '  " for languages that don't use parentheses for function call
+  else  " for languages that don't use parentheses for function call
     let removed_delimiter_content = removed_print_function_content[1:]
-  else
-    let removed_delimiter_content = removed_print_function_content
+  " else
+  "   let removed_delimiter_content = removed_print_function_content
+  endif
+
+  let end_line_delimiter = s:End_line_delimiters()
+  if removed_delimiter_content[len(removed_delimiter_content) - 1] !=# end_line_delimiter
+    let removed_delimiter_content = removed_delimiter_content . ' '
   endif
 
   return removed_delimiter_content
