@@ -189,6 +189,7 @@
   - an "invalid" characters like `->`, `>>` that typically come with online problems
   - another white space
   - comment character of the current language in the file
+- This means that none-code text cannot contain two or more consecutive white spaces
 - If a line has an invalid character before comment character, it will move the comment character before invalid character.
 
 
