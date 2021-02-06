@@ -151,10 +151,11 @@ function! s:Get_string_parts(string, add_comment) abort
   let trimmed_string = substitute(trimmed_string, '\v\s*$', '', 'e') " remove trailing white spaces
 
   let comment_char = split(&commentstring, '%s')[0]
+  let end_line_delimiter = s:End_line_delimiters()
   let noise_chars_pattern = join(s:Noise_chars(), '|')
   " The pattern look from the back of the trimmed string. It first looks for noise chars after valid code, then empty space. If match, it looks beforehand 1 char and check if it is a ; or a space
   " The idea is to check at least a ; or a space before the noise or comment char to distinguish the valid code and the comment parts in the line
-  let comment_regex = '\v(;|\s)@<=(' . noise_chars_pattern . '|\s|' . comment_char . ').{-}$' 
+  let comment_regex = '\v(' . end_line_delimiter . '|\s)@<=(' . noise_chars_pattern . '|\s|' . comment_char . ').{-}$' 
   let comment_string = matchstr(trimmed_string, comment_regex)
   let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
   if empty_comment_string ==# ''
@@ -276,7 +277,7 @@ function! s:Get_print_function_name() abort
 endfunction
 
 
-" Allow the user to specify end of line delimiters for a programming language
+" Allow the user to specify end of line delimiters for a programming language, default is ';'
 let s:end_line_delimiter_dict = {
       \ 'go' : ';',
       \ 'javascript' : ';',
@@ -295,7 +296,7 @@ function! s:End_line_delimiters() abort
   return get(s:end_line_delimiter_dict, &filetype, ';')
 endfunction
 
-" allows the user to spcify the function call delimiters for a programming language
+" allows the user to spcify the function call delimiters for a programming language, default is '( and )'
 let s:function_call_delimiter_dict = {
       \ 'go' : ['(', ')'],
       \ 'javascript' : ['(', ')'],
@@ -317,7 +318,7 @@ endfunction
 
 " allows the user to specify noise characters to comment out
 let s:noise_chars_dict = {
-      \ 'general' :['⇉+', '⇆+', '↔+', '⇨+', '↔+', '⇾+', '➞+', '\-+\>', '\~+\>', '\>+'],
+      \ 'general' :['⇉+', '⇆+', '↔+', '⇨+', '↔+', '⇾+', '➞+', '\-+\>', '\~+\>', '\>{2,}'],
       \ }
 
 if exists('g:noise_chars') 
