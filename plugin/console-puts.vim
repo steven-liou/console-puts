@@ -196,8 +196,6 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
   if a:add_comment
     let parts = split(a:trimmed_string, '\v\s{2,}')
     let last_part = parts[len(parts) - 1]
-    echom parts
-    echom last_part
     if len(parts) > 1 && match(last_part, comment_char) ==# -1
       return parts[len(parts) - 1]
     endif
