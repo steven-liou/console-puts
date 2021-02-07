@@ -166,15 +166,14 @@ function! s:Get_string_parts(string, add_comment) abort
     " Add the comment char in front, decide on whether first char is a space already
     if comment_string[0] !=# ' ' 
       let comment_string = ' ' . comment_char . comment_padding . comment_string
-    " else
-    "   let comment_string = ' ' . comment_char . comment_padding . comment_string[1:]
+    else
+      let comment_string = ' ' . comment_char . comment_padding . comment_string[1:]
     endif
   else
     if comment_string[0] !=# ' ' && comment_string_length > 0
       let comment_string = ' ' . comment_string
     endif
   endif
-
 
   " Get the content string
   if len(comment_string) > 0 
@@ -188,31 +187,52 @@ function! s:Get_string_parts(string, add_comment) abort
   return [leading_spaces, content_string, comment_string]
 endfunction
 
-
 function! s:Get_comment_part(trimmed_string, add_comment) abort
-  let comment_char = split(&commentstring, '%s')[0]
-  
-  " take care of lines that have more than two consecutive white spaces in a string literal
-  if a:add_comment
-    let parts = split(a:trimmed_string, '\v\s{2,}')
-    let last_part = parts[len(parts) - 1]
-    if len(parts) > 1 && match(last_part, comment_char) ==# -1
-      return parts[len(parts) - 1]
-    endif
-  endif
-
   let end_line_delimiter = s:End_line_delimiters()
   let noise_chars_pattern = join(s:Noise_chars(), '|')
-  " The pattern look from the back of the trimmed string. It first looks for noise chars after valid code, then empty space. If match, it looks beforehand 1 char and check if it is a ; or a space
-  " The idea is to check at least a ; or a space before the noise or comment char to distinguish the valid code and the comment parts in the line
-  let comment_regex = '\v(' . end_line_delimiter . '\s*|\s+)@<=(' . noise_chars_pattern . '|' . comment_char . ').{-}$' 
-  let comment_string = matchstr(a:trimmed_string, comment_regex)
+  let comment_char = split(&commentstring, '%s')[0]
+  let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char
+
+  let trimmed_string = s:Clean_string_literal(a:trimmed_string, start_comment_chars)
+
+  " if the string has EOL delimiter that is not a space, the comment part is everything after it
+  if end_line_delimiter != '\s' && match(trimmed_string, end_line_delimiter) !=# -1
+    let comment_string = matchstr(trimmed_string, '\v(' . end_line_delimiter . ')@<=.*$')
+    return comment_string
+  endif
+
+  " if the string has noise characters, the comment part is noise characters plus everything after it
+  let comment_char_index = match(trimmed_string, comment_char)
+  let comment_char_index = comment_char_index ==# -1 ? 10000 : comment_char_index 
+  let noise_char_index = match(trimmed_string, '\v' . noise_chars_pattern)
+
+  if noise_char_index !=# -1 &&  noise_char_index < comment_char_index
+    let comment_string = matchstr(trimmed_string, '\v(' . noise_chars_pattern . ').*$')
+    return comment_string
+  endif
+
+  " handles comment chars
+  if match(trimmed_string, comment_char) !=# -1
+    let comment_string = matchstr(trimmed_string, '\v' . comment_char . '.{-}$' )
+    return comment_string
+  endif
+
+  " handles lines with consecutive spaces
+  let comment_string = matchstr(trimmed_string, '\v(\s)@<=(\s).{-}$')
+
   let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
   if empty_comment_string ==# ''
     let comment_string = ''
   end
   
   return comment_string
+endfunction
+
+function! s:Clean_string_literal(string, remove_string_chars) abort
+  let regex = '\v(\W[''"][^''"]*)@<=(\s{2,}|' . a:remove_string_chars . ')([^''"]*[''"]\W)@='  " looking behind and forward to see the matched white spaces, EOL delimiters, comment chars, or noise characters are within single or double quotes
+
+  let trimmed_string = substitute(a:string, regex, '', 'ge')
+  return trimmed_string
 endfunction
 
 function! s:Add_print_function(string, print_option) abort
@@ -367,5 +387,4 @@ if g:console_puts_mapping
   vmap cp <Plug>ConsolePutsVisual
   nmap cp <Plug>ConsolePutsNormal
 endif
-
 

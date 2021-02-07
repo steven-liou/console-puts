@@ -83,16 +83,21 @@
 ---
 ## Examples for auto commenting
 
-- Takes care of both the line whether it has `;` or not. Just make sure that the "padding" length is either two spaces or a `;` and a whitespace after valid code
+- Takes care of the line whether it has `;` or not. Just make sure that there is one of the following delimiters in your code
   
     ```javascript
+    interview('Live ; coding');Anything after end of line character will automatically be commented out
+    interview('Live // coding')// Anything after comment characters will automatically be commented out
+    interview('Live >> coding')>> Anything after noise characters will automatically be commented out
+    interview('Live  coding')  Anything after two consecutive spaces will automatically be commented out
     "This is line 1"  two spaces after valid code will automatically be commented out
     "This is line 1"; a ; and a space after valid code will automatically be commented out
 
     // Result after motion
-    console.log("This is line 1")  //  two spaces after valid code will automatically be commented out
-    console.log("This is line 1"); //  a ; and a space after valid code will automatically be commented out
-
+    console.log(interview('Live ; coding')); // Anything after end of line character will automatically be commented out
+    console.log(interview('Live // coding'))  // Anything after comment characters will automatically be commented out
+    console.log(interview('Live >> coding'))  // >> Anything after noise characters will automatically be commented out
+    console.log(interview('Live  coding'))  // Anything after two consecutive spaces will automatically be commented out
     ```
 - Takes care of invalid symbols common in problems from online websites
 
@@ -111,7 +116,6 @@
     // Result after motion
     console.log(interview("Live coding")); // >> interview result Also works if the line doesn't have existing comment characters
     console.log(interview("Live coding"))  // >> interview result Also works if the line doesn't have existing comment characters
-
     ```
 
 ---
@@ -184,17 +188,9 @@
 - Vim
 
 ---
-### More details on plugin behaviors
-- The plugin parses the "none-code" portion by first identifying an end of line character, either a `;` or a whitespace, then check if it is followed by one of:
-  - an "invalid" characters like `->`, `>>` that typically come with online problems
-  - another white space
-  - comment character of the current language in the file
-- This means that none-code text cannot contain two or more consecutive white spaces
-- If a line has an invalid character before comment character, it will move the comment character before invalid character.
-
-
----
 ### Bugs
+- In the comment string of a line, inside single or double quotes, those consecutive spaces, comment chars, end of line delimiter, noise chars will be removed. 
+  - This is not likely to be fixed because it is a side effect of solving the same situation in the valid code part of the line
 
 
 ---
