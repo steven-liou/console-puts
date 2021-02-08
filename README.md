@@ -90,8 +90,6 @@
     interview('Live // coding')// Anything after comment characters will automatically be commented out
     interview('Live >> coding')>> Anything after noise characters will automatically be commented out
     interview('Live  coding')  Anything after two consecutive spaces will automatically be commented out
-    "This is line 1"  two spaces after valid code will automatically be commented out
-    "This is line 1"; a ; and a space after valid code will automatically be commented out
 
     // Result after motion
     console.log(interview('Live ; coding')); // Anything after end of line character will automatically be commented out
