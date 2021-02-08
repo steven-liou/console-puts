@@ -162,6 +162,11 @@
       \ 'ruby' : ['!!'],
       \ }
     ```
+- You can specify the minimum number of consecutive spaces to automatically comment out, default is 2
+
+    ```vim
+    let g:cp_minimum_consecutive_spaces = 2
+    ```
 
 - The default setting will have highlight during print function toggling for visual feedback. The default highlight duration is 750 ms. To turn off highlight or set a different timeout in ms, add this to `.vimrc`
   

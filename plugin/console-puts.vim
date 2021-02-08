@@ -191,7 +191,7 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
   let end_line_delimiter = s:End_line_delimiters()
   let noise_chars_pattern = join(s:Noise_chars(), '|')
   let comment_char = split(&commentstring, '%s')[0]
-  let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char . '|\s{2,}'
+  let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char . '|\s{2,}' 
 
   let trimmed_string = s:Clean_string_literal(a:trimmed_string, start_comment_chars)
 
@@ -218,7 +218,7 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
   endif
 
   " handles lines with consecutive spaces
-  let comment_string = matchstr(trimmed_string, '\v(\s)@<=(\s).{-}$')
+  let comment_string = matchstr(trimmed_string, '\v(' . s:white_spaces .')@<=.{-}$')
 
   let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
   if empty_comment_string ==# ''
@@ -402,6 +402,14 @@ if exists('g:noise_chars')
     let s:noise_chars_dict[language] = delimiters
   endfor
 endif
+
+" allows the user to specify minimum number of consecutive white spaces to automatically comment out
+if exists('g:cp_minimum_consecutive_spaces')
+  let s:consecutive_spaces_number = g:cp_minimum_consecutive_spaces
+else
+  let s:consecutive_spaces_number = 2
+end
+let s:white_spaces = '\s{' . string(s:consecutive_spaces_number) . ',}'
 
 function! s:Noise_chars() abort
   " noise characters are symbols that some problems from online like to put in front of test cases expected results. The goal is to match those noise chars and move/place the comment char infront of them if they exist
