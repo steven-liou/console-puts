@@ -189,9 +189,6 @@
 
 ---
 ### Bugs
-- In the comment string of a line, inside single or double quotes, those consecutive spaces, comment chars, end of line delimiter, noise chars will be removed. 
-  - This is not likely to be fixed because it is a side effect of solving the same situation in the valid code part of the line
-
 
 ---
 ### Todos

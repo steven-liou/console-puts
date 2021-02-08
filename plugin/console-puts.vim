@@ -191,7 +191,7 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
   let end_line_delimiter = s:End_line_delimiters()
   let noise_chars_pattern = join(s:Noise_chars(), '|')
   let comment_char = split(&commentstring, '%s')[0]
-  let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char
+  let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char . '|\s{2,}'
 
   let trimmed_string = s:Clean_string_literal(a:trimmed_string, start_comment_chars)
 
@@ -229,10 +229,43 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
 endfunction
 
 function! s:Clean_string_literal(string, remove_string_chars) abort
-  let regex = '\v(\W[''"][^''"]*)@<=(\s{2,}|' . a:remove_string_chars . ')([^''"]*[''"]\W)@='  " looking behind and forward to see the matched white spaces, EOL delimiters, comment chars, or noise characters are within single or double quotes
+  let chars_regex = '\v(' . a:remove_string_chars . ')'
 
-  let trimmed_string = substitute(a:string, regex, '', 'ge')
-  return trimmed_string
+  " logics for finding the first start of comment chars index that is not in a single or double quote
+  let start_comment_index = 0
+  let start_quote_index = 0
+  let end_quote_index = -1
+  
+  while match(a:string, chars_regex, start_comment_index) !=# -1
+    let matched_index = match(a:string, chars_regex, start_comment_index)
+    let matched_chars = matchstr(a:string, chars_regex, start_comment_index)
+
+    let end_quote_index = matched_index < end_quote_index ? start_quote_index - 1 : end_quote_index
+
+    let start_quote_index = match(a:string, '\v[''"]', end_quote_index + 1)
+    let end_quote_index = match(a:string, '\v[''"]', start_quote_index + 1)
+
+    if start_quote_index < matched_index && matched_index < end_quote_index
+      let start_comment_index = matched_index + len(matched_chars)
+    else
+      let start_comment_index = matched_index 
+      break
+    endif
+  endwhile
+
+  if start_comment_index
+    let content_string = a:string[0:start_comment_index - 1]
+    let comment_string = a:string[start_comment_index:]
+  else 
+    let content_string = a:string
+    let comment_string = '' 
+  endif
+
+  let in_quote_chars_regex = '\v([''"][^''"]*)@<=(' . a:remove_string_chars . ')([^''"]*[''"])@='  " looking behind and forward to see the matched white spaces, EOL delimiters, comment chars, or noise characters are within single or double quotes
+
+  " remove start of comment characters in quotes only for the part of line that is not comment 
+  let trimmed_content_string = substitute(content_string, in_quote_chars_regex, '', 'ge')
+  return trimmed_content_string . comment_string
 endfunction
 
 function! s:Add_print_function(string, print_option) abort
