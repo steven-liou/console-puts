@@ -197,8 +197,7 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
 
   " if the string has EOL delimiter that is not a space, the comment part is everything after it
   if end_line_delimiter != '\s' && match(trimmed_string, end_line_delimiter) !=# -1
-    let comment_string = matchstr(trimmed_string, '\v(' . end_line_delimiter . ')@<=.*$')
-    return comment_string
+    return matchstr(trimmed_string, '\v(' . end_line_delimiter . ')@<=.*$')
   endif
 
   " if the string has noise characters, the comment part is noise characters plus everything after it
@@ -207,25 +206,27 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
   let noise_char_index = match(trimmed_string, '\v' . noise_chars_pattern)
 
   if noise_char_index !=# -1 &&  noise_char_index < comment_char_index
-    let comment_string = matchstr(trimmed_string, '\v(' . noise_chars_pattern . ').*$')
+    return matchstr(trimmed_string, '\v(' . noise_chars_pattern . ').*$')
+  endif
+
+
+  " handles lines with consecutive spaces
+  if match(trimmed_string, '\v' . s:white_spaces) !=# -1
+    let comment_string = matchstr(trimmed_string, '\v(' . s:white_spaces .')@<=.{-}$')
+
+    let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
+    if empty_comment_string ==# ''
+      let comment_string = ''
+    end
+
     return comment_string
   endif
 
   " handles comment chars
   if match(trimmed_string, comment_char) !=# -1
-    let comment_string = matchstr(trimmed_string, '\v' . comment_char . '.{-}$' )
-    return comment_string
+    return matchstr(trimmed_string, '\v' . comment_char . '.{-}$' )
   endif
-
-  " handles lines with consecutive spaces
-  let comment_string = matchstr(trimmed_string, '\v(' . s:white_spaces .')@<=.{-}$')
-
-  let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
-  if empty_comment_string ==# ''
-    let comment_string = ''
-  end
   
-  return comment_string
 endfunction
 
 function! s:Clean_string_literal(string, remove_string_chars) abort
