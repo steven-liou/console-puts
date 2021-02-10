@@ -209,24 +209,17 @@ function! s:Get_comment_part(trimmed_string, add_comment) abort
     return matchstr(trimmed_string, '\v(' . noise_chars_pattern . ').*$')
   endif
 
-
   " handles lines with consecutive spaces
   if match(trimmed_string, '\v' . s:white_spaces) !=# -1
-    let comment_string = matchstr(trimmed_string, '\v(' . s:white_spaces .')@<=.{-}$')
-
-    let empty_comment_string = substitute(comment_string, '\v^\s*', '', 'e')
-    if empty_comment_string ==# ''
-      let comment_string = ''
-    end
-
-    return comment_string
+    return matchstr(trimmed_string, '\v(' . s:white_spaces .')@<=.{-}$')
   endif
 
   " handles comment chars
   if match(trimmed_string, comment_char) !=# -1
     return matchstr(trimmed_string, '\v' . comment_char . '.{-}$' )
   endif
-  
+
+  return ''
 endfunction
 
 function! s:Clean_string_literal(string, remove_string_chars) abort
@@ -234,12 +227,13 @@ function! s:Clean_string_literal(string, remove_string_chars) abort
 
   " logics for finding the first start of comment chars index that is not in a single or double quote
   let start_comment_index = 0
+  let check_index = 0
   let start_quote_index = 0
   let end_quote_index = -1
   
-  while match(a:string, chars_regex, start_comment_index) !=# -1
-    let matched_index = match(a:string, chars_regex, start_comment_index)
-    let matched_chars = matchstr(a:string, chars_regex, start_comment_index)
+  while match(a:string, chars_regex, check_index) !=# -1
+    let matched_index = match(a:string, chars_regex, check_index)
+    let matched_chars = matchstr(a:string, chars_regex, check_index)
 
     let end_quote_index = matched_index < end_quote_index ? start_quote_index - 1 : end_quote_index
 
@@ -247,7 +241,7 @@ function! s:Clean_string_literal(string, remove_string_chars) abort
     let end_quote_index = match(a:string, '\v[''"]', start_quote_index + 1)
 
     if start_quote_index < matched_index && matched_index < end_quote_index
-      let start_comment_index = matched_index + len(matched_chars)
+      let check_index = matched_index + len(matched_chars)
     else
       let start_comment_index = matched_index 
       break
