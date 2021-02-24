@@ -80,11 +80,14 @@ function! s:Toggle_print(type, start_line, end_line, print_option) abort
     let current_line_string = getline(line)
     if s:Invalid_line(current_line_string) | continue | endif
     
-    if (s:first_count > 0) && a:print_option !=# -1  " user specified valid option that adds print function
+    " first handle cases when user specified a valid option that adds print function
+    " For cases where users specify an invalid option, option that removes function, or line that has print function, remove the print function
+    " Else, add the print function to the line
+    if (s:first_count > 0) && a:print_option !=# -1  
       call s:Option_print_helper(line, current_line_string, a:print_option)
-    elseif s:Has_print_function_in_line(current_line_string) !=# '' || a:print_option ==# -1  " if line has print function, remove it, else add print function 
+    elseif s:Has_print_function_in_line(current_line_string) !=# '' || a:print_option ==# -1  
       call s:Remove_print_helper(line, current_line_string)
-    else
+    else  
       call s:Add_print_helper(line, current_line_string, a:print_option)
     endif
   endfor
@@ -105,7 +108,10 @@ endfunction
 
 " The helper functions that set the line with final results, and handle logic for whether to highlight the toggling actions
 function! s:Option_print_helper(line, current_line_string, option) abort
-  let removed_print_line = s:Remove_print_function_in_line(a:current_line_string)
+  let removed_print_line = a:current_line_string
+  if s:Has_print_function_in_line(removed_print_line) !=# ''
+    let removed_print_line = s:Remove_print_function_in_line(removed_print_line)
+  endif
   let added_print_line = s:Add_print_function(removed_print_line, a:option)
   call setline(a:line, added_print_line)
 
@@ -134,9 +140,10 @@ endfunction
 
 function! s:Has_print_function_in_line(string) abort
   let print_function_name = s:Get_print_function_name()
+  let [open_delimiter, _] = s:Function_call_delimiters()
 
   for name in print_function_name
-    let match_string = '\v^\s*' . name . '[ (]'
+    let match_string = '\v^\s*' . name . '[' . open_delimiter . '\s]' 
 
     if (match(a:string, match_string) !=# -1)
       return name
@@ -149,15 +156,86 @@ function! s:Get_string_parts(string, add_comment) abort
   let leading_spaces = matchstr(a:string, '\v^\s*')
   let trimmed_string = a:string[len(leading_spaces):]
   let trimmed_string = substitute(trimmed_string, '\v\s*$', '', 'e') " remove trailing white spaces
+  let [content_string, comment_string] = s:Parse_content_comment(trimmed_string, a:add_comment)
 
-  let comment_string = s:Get_comment_part(trimmed_string, a:add_comment)
-  let comment_string_length = len(comment_string)
+  return [leading_spaces, content_string, comment_string]
+endfunction
 
+function! s:Parse_content_comment(trimmed_string, add_comment) abort
+  let end_line_delimiter = s:End_line_delimiters()
+  let noise_chars_pattern = join(s:Noise_chars(), '|')
+  let comment_char = split(&commentstring, '%s')[0]
+  let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char . '|\s{2,}' 
+
+  let [content_string, comment_string] = s:Get_content_comment(a:trimmed_string, start_comment_chars)
+
+  if end_line_delimiter != '\s' && match(comment_string, end_line_delimiter) !=# -1  " handles lines with EOL delimiter
+    let comment_string = matchstr(comment_string, '\v(' . end_line_delimiter . ')@<=.*$')
+    let content_string = content_string . end_line_delimiter
+  elseif match(comment_string, '\v^' . s:white_spaces) !=# -1  " handles lines with consecutive spaces
+    let comment_string = matchstr(comment_string, '\v(' . s:white_spaces .')@<=.{-}$')
+  elseif match(comment_string, '\v^\s*' . comment_char) !=# -1  " handles comment chars
+    let comment_string = matchstr(comment_string, '\v' . comment_char . '.{-}$' )
+  elseif match(comment_string, '\v^\s*' . noise_chars_pattern)  " handles line swith noise characters
+    let comment_string = matchstr(comment_string, '\v(' . noise_chars_pattern . ').*$')
+  endif
+
+  let comment_string = s:Pad_comment_string(comment_string, a:add_comment)
+  return [content_string, comment_string]
+endfunction
+
+" This function handles the the core logics of getting the correct content/comment parts of a line by checking whether those characters are inside quotes
+" Only start comment characters that are not inside quotes count as start of comment
+function! s:Get_content_comment(string, start_comment_chars) abort
+  let chars_regex = '\v(' . a:start_comment_chars . ')'
+  let comment_char = split(&commentstring, '%s')[0]
+
+  " logics for finding the first start of comment chars index that is not in a single or double quote
+  let start_comment_index = 0
+  let check_index = 0
+  let start_quote_index = 0
+  let end_quote_index = 0
+  let start_quote_regex = '\v([\\''"])@<![''"]'
+         
+  while match(a:string, chars_regex, check_index) !=# -1
+    let matched_index = match(a:string, chars_regex, check_index)
+    let matched_chars = matchstr(a:string, chars_regex, check_index)
+
+    let start_quote_match_index = match(a:string, start_quote_regex, start_quote_index)
+    if check_index >= end_quote_index && start_quote_match_index !=# -1
+      let start_quote_index = start_quote_match_index
+      let start_quote_char = a:string[start_quote_index]
+      let end_quote_regex = '\v([\\' . start_quote_char . '])@<!' . start_quote_char
+      let end_quote_index = match(a:string, end_quote_regex, start_quote_index + 1)
+    endif
+
+    " if the matched start comment char is not inside quote, break, otherwise advance the check index, the equality is important here to handle Vim comment char, which is "
+    let inside_quote = (start_quote_index <= matched_index) && (matched_index <= end_quote_index)
+
+    if inside_quote 
+      let check_index = end_quote_index + 1
+    else
+      let start_comment_index = matched_index 
+      break
+    endif
+  endwhile
+
+  let content_string = start_comment_index ? a:string[0:start_comment_index - 1] : a:string
+  let comment_string = start_comment_index ? a:string[start_comment_index:] : ''
+
+  return [content_string, comment_string]
+endfunction
+
+function s:Pad_comment_string(string, add_comment) abort
+  let comment_string = a:string
+  let comment_string_length = len(a:string)
+
+  " logics for prepending comment string with white spaces
   let comment_char = split(&commentstring, '%s')[0]
   " if comment part doesn't start with the comment char
   if match(comment_string, '\v^\s*' . comment_char) ==# -1 && comment_string_length > 0 && a:add_comment
-    " remotve existing comment char if exists
-    if match(comment_string, '\v' . comment_char) !=# -1
+    " remotve existing comment char if exists, and if comment char is not ' or "
+    if match(comment_string, '\v' . comment_char) !=# -1 && match(comment_char, '\v[''"]') ==# -1
       let comment_string = substitute(comment_string, '\v' . comment_char, '', 'e')
     endif
     
@@ -175,92 +253,7 @@ function! s:Get_string_parts(string, add_comment) abort
     endif
   endif
 
-  " Get the content string
-  if len(comment_string) > 0 
-    let content_string = trimmed_string[:-(comment_string_length + 1)]
-    let content_string = content_string[len(content_string) - 1] ==# ' ' ? content_string[:-2] : content_string
-    let content_string = substitute(content_string, '\v\s*$', '', 'e')  " remove trailing white spaces
-  else
-    let content_string = trimmed_string
-  endif
-
-  return [leading_spaces, content_string, comment_string]
-endfunction
-
-function! s:Get_comment_part(trimmed_string, add_comment) abort
-  let end_line_delimiter = s:End_line_delimiters()
-  let noise_chars_pattern = join(s:Noise_chars(), '|')
-  let comment_char = split(&commentstring, '%s')[0]
-  let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char . '|\s{2,}' 
-
-  let trimmed_string = s:Clean_string_literal(a:trimmed_string, start_comment_chars)
-
-  " if the string has EOL delimiter that is not a space, the comment part is everything after it
-  if end_line_delimiter != '\s' && match(trimmed_string, end_line_delimiter) !=# -1
-    return matchstr(trimmed_string, '\v(' . end_line_delimiter . ')@<=.*$')
-  endif
-
-  " if the string has noise characters, the comment part is noise characters plus everything after it
-  let comment_char_index = match(trimmed_string, comment_char)
-  let comment_char_index = comment_char_index ==# -1 ? 10000 : comment_char_index 
-  let noise_char_index = match(trimmed_string, '\v' . noise_chars_pattern)
-
-  if noise_char_index !=# -1 &&  noise_char_index < comment_char_index
-    return matchstr(trimmed_string, '\v(' . noise_chars_pattern . ').*$')
-  endif
-
-  " handles lines with consecutive spaces
-  if match(trimmed_string, '\v' . s:white_spaces) !=# -1
-    return matchstr(trimmed_string, '\v(' . s:white_spaces .')@<=.{-}$')
-  endif
-
-  " handles comment chars
-  if match(trimmed_string, comment_char) !=# -1
-    return matchstr(trimmed_string, '\v' . comment_char . '.{-}$' )
-  endif
-
-  return ''
-endfunction
-
-function! s:Clean_string_literal(string, remove_string_chars) abort
-  let chars_regex = '\v(' . a:remove_string_chars . ')'
-
-  " logics for finding the first start of comment chars index that is not in a single or double quote
-  let start_comment_index = 0
-  let check_index = 0
-  let start_quote_index = 0
-  let end_quote_index = -1
-  
-  while match(a:string, chars_regex, check_index) !=# -1
-    let matched_index = match(a:string, chars_regex, check_index)
-    let matched_chars = matchstr(a:string, chars_regex, check_index)
-
-    let end_quote_index = matched_index < end_quote_index ? start_quote_index - 1 : end_quote_index
-
-    let start_quote_index = match(a:string, '\v[''"]', end_quote_index + 1)
-    let end_quote_index = match(a:string, '\v[''"]', start_quote_index + 1)
-
-    if start_quote_index < matched_index && matched_index < end_quote_index
-      let check_index = matched_index + len(matched_chars)
-    else
-      let start_comment_index = matched_index 
-      break
-    endif
-  endwhile
-
-  if start_comment_index
-    let content_string = a:string[0:start_comment_index - 1]
-    let comment_string = a:string[start_comment_index:]
-  else 
-    let content_string = a:string
-    let comment_string = '' 
-  endif
-
-  let in_quote_chars_regex = '\v([''"][^''"]*)@<=(' . a:remove_string_chars . ')([^''"]*[''"])@='  " looking behind and forward to see the matched white spaces, EOL delimiters, comment chars, or noise characters are within single or double quotes
-
-  " remove start of comment characters in quotes only for the part of line that is not comment 
-  let trimmed_content_string = substitute(content_string, in_quote_chars_regex, '', 'ge')
-  return trimmed_content_string . comment_string
+  return comment_string
 endfunction
 
 function! s:Add_print_function(string, print_option) abort
@@ -331,7 +324,8 @@ endfunction
 " Allow the user to specify print function names for a programming language
 let s:print_function_dict = {
       \ 'go' : ['fmt.Println', 'fmt.Print'],
-      \ 'javascript' : ['console.log'],
+      \ 'javascript' : ['console.log', 'console.dir', 'console.debug'],
+      \ 'lua' : ['print'],
       \ 'python' : ['print'],
       \ 'ruby' : ['puts', 'p', 'print'],
       \ 'vim' : ['echom', 'echo'],
@@ -352,6 +346,7 @@ endfunction
 let s:end_line_delimiter_dict = {
       \ 'go' : ';',
       \ 'javascript' : ';',
+      \ 'lua' : ';',
       \ 'python' : ';',
       \ 'ruby' : ';',
       \ 'vim' : ';',
@@ -371,6 +366,7 @@ endfunction
 let s:function_call_delimiter_dict = {
       \ 'go' : ['(', ')'],
       \ 'javascript' : ['(', ')'],
+      \ 'lua' : ['(', ')'],
       \ 'python' : ['(', ')'],
       \ 'ruby' : [' ', ''],
       \ 'vim' : [' ', ''],
