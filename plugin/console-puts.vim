@@ -166,6 +166,7 @@ function! s:Parse_content_comment(trimmed_string, add_comment) abort
   let noise_chars_pattern = join(s:Noise_chars(), '|')
   let comment_char = split(&commentstring, '%s')[0]
   let start_comment_chars = end_line_delimiter . '|' . noise_chars_pattern . '|' . comment_char . '|\s{2,}' 
+  let start_comment_chars = substitute(start_comment_chars, '\V/', '\\/', 'g')  " escape the forward slash / for languages with comment like JavaScript's //
 
   let [content_string, comment_string] = s:Get_content_comment(a:trimmed_string, start_comment_chars)
 
@@ -188,7 +189,6 @@ endfunction
 " Only start comment characters that are not inside quotes count as start of comment
 function! s:Get_content_comment(string, start_comment_chars) abort
   let chars_regex = '\v(' . a:start_comment_chars . ')'
-  let comment_char = split(&commentstring, '%s')[0]
 
   " logics for finding the first start of comment chars index that is not in a single or double quote
   let start_comment_index = 0
@@ -196,13 +196,15 @@ function! s:Get_content_comment(string, start_comment_chars) abort
   let start_quote_index = 0
   let end_quote_index = 0
   let start_quote_regex = '\v([\\''"])@<![''"]'
+  let next_quote_regex = '\v([''"])[^\1]{-}(' . a:start_comment_chars . ')[^\1]{-}\1' 
          
   while match(a:string, chars_regex, check_index) !=# -1
     let matched_index = match(a:string, chars_regex, check_index)
     let matched_chars = matchstr(a:string, chars_regex, check_index)
 
-    let start_quote_match_index = match(a:string, start_quote_regex, start_quote_index)
-    if check_index >= end_quote_index && start_quote_match_index !=# -1
+    let start_quote_match_index = match(a:string, start_quote_regex, check_index)
+    
+    if start_quote_match_index !=# -1
       let start_quote_index = start_quote_match_index
       let start_quote_char = a:string[start_quote_index]
       let end_quote_regex = '\v([\\' . start_quote_char . '])@<!' . start_quote_char
@@ -210,10 +212,14 @@ function! s:Get_content_comment(string, start_comment_chars) abort
     endif
 
     " if the matched start comment char is not inside quote, break, otherwise advance the check index, the equality is important here to handle Vim comment char, which is "
-    let inside_quote = (start_quote_index <= matched_index) && (matched_index <= end_quote_index)
+    let next_quote_index = match(a:string, next_quote_regex, end_quote_index + 1)
+    let inside_quote = (start_quote_index < matched_index) && (matched_index < end_quote_index) 
+    let next_quote = matchstr(a:string, next_quote_regex, end_quote_index + 1)
 
-    if inside_quote 
+    if inside_quote || next_quote_index !=# -1
       let check_index = end_quote_index + 1
+    elseif check_index >= len(a:string) - 1
+      break
     else
       let start_comment_index = matched_index 
       break
