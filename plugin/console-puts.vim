@@ -330,9 +330,10 @@ endfunction
 " Allow the user to specify print function names for a programming language
 let s:print_function_dict = {
       \ 'go' : ['fmt.Println', 'fmt.Print'],
-      \ 'javascript' : ['console.log', 'console.dir', 'console.debug'],
+      \ 'javascript' : ['console.log', 'console.dir', 'console.debug', 'console.table'],
       \ 'lua' : ['print'],
       \ 'python' : ['print'],
+      \ 'r' : ['print'],
       \ 'ruby' : ['puts', 'p', 'print'],
       \ 'vim' : ['echom', 'echo'],
       \ }
