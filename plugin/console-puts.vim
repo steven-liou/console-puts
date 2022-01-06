@@ -354,6 +354,7 @@ endfunction
 let s:end_line_delimiter_dict = {
       \ 'go' : ';',
       \ 'javascript' : ';',
+      \ 'typescript' : ';',
       \ 'lua' : ';',
       \ 'python' : ';',
       \ 'ruby' : ';',
@@ -374,6 +375,7 @@ endfunction
 let s:function_call_delimiter_dict = {
       \ 'go' : ['(', ')'],
       \ 'javascript' : ['(', ')'],
+      \ 'typescript' : ['(', ')'],
       \ 'lua' : ['(', ')'],
       \ 'python' : ['(', ')'],
       \ 'ruby' : [' ', ''],
