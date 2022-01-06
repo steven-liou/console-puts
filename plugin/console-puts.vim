@@ -331,6 +331,7 @@ endfunction
 let s:print_function_dict = {
       \ 'go' : ['fmt.Println', 'fmt.Print'],
       \ 'javascript' : ['console.log', 'console.dir', 'console.debug', 'console.table'],
+      \ 'typescript' : ['console.log', 'console.dir', 'console.debug', 'console.table'],
       \ 'lua' : ['print'],
       \ 'python' : ['print'],
       \ 'r' : ['print'],
