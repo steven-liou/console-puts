@@ -331,6 +331,7 @@ endfunction
 let s:print_function_dict = {
       \ 'go' : ['fmt.Println', 'fmt.Print'],
       \ 'javascript' : ['console.log', 'console.dir', 'console.debug', 'console.table'],
+      \ 'typescript' : ['console.log', 'console.dir', 'console.debug', 'console.table'],
       \ 'lua' : ['print'],
       \ 'python' : ['print'],
       \ 'r' : ['print'],
@@ -353,6 +354,7 @@ endfunction
 let s:end_line_delimiter_dict = {
       \ 'go' : ';',
       \ 'javascript' : ';',
+      \ 'typescript' : ';',
       \ 'lua' : ';',
       \ 'python' : ';',
       \ 'ruby' : ';',
@@ -373,6 +375,7 @@ endfunction
 let s:function_call_delimiter_dict = {
       \ 'go' : ['(', ')'],
       \ 'javascript' : ['(', ')'],
+      \ 'typescript' : ['(', ')'],
       \ 'lua' : ['(', ')'],
       \ 'python' : ['(', ')'],
       \ 'ruby' : [' ', ''],
