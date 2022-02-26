@@ -45,7 +45,7 @@ function! s:Print_options() abort
 
 
   if exists('*nvim_notify')
-    let options_string = join(options, '\n')
+    let options_string = join(options, "\n")
     call nvim_notify(options_string, 2, {})
   else
     let options_string = join(options, '')
