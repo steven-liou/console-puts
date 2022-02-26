@@ -31,10 +31,15 @@ function! s:Print_options() abort
   let print_function_names = copy(s:Get_print_function_name())
   let print_function_names = add(print_function_names, 'Remove')
   let index = 0
-  let options = ['Available option before operator motion: | ']
+  let delimiter = ' | '
+  if exists('*nvim_notify')
+    let delimiter = ''
+  endif
+  let options = ['Available option before operator motion:' . delimiter]
+
 
   for name in print_function_names
-    call add(options, string(index + 1) . '.' . print_function_names[index] . ' | ')
+    call add(options, string(index + 1) . '.' . print_function_names[index] . delimiter )
     let index += 1
   endfor
 
