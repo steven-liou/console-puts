@@ -38,7 +38,13 @@ function! s:Print_options() abort
     let index += 1
   endfor
 
-  echom join(options, '')
+  let options_string = join(options, '')
+
+  if exists('*nvim_notify')
+    call nvim_notify(options_string, 2, {})
+  else
+    echom options_string
+  endif
 endfunction
 
 " Main function
